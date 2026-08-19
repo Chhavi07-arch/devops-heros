@@ -5,8 +5,13 @@ cd result_file
 touch result.log
 echo "This is my result file" > result.log
 date
+<<<<<<< HEAD
 echo $hostname
 echo $whoami
+=======
+echo hostname
+echo whoami
+>>>>>>> fbd957097c7bfe222468b33af5c097c2e9e05ec8
 df -h
 ps > process.log
 
