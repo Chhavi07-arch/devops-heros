@@ -1,12 +1,12 @@
-FROM node:20
+FROM node:20-slim
 
 WORKDIR /app
 
-COPY package*.json ./
+COPY package.json .
 
 RUN npm install
 
-ADD <link> .
+COPY app.js .
 
 EXPOSE 3000
 
