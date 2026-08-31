@@ -1,33 +1,33 @@
-<<<<<<< HEAD
-# print current data
-# hostname and username
-# process
-# add process info inside a file name process.log
+# Shell Scripting Homework - Task Notes
 
-# print name,roll_no, comment 
+## Requirements
+- print current date            -> `date`
+- print hostname and username   -> `hostname`, `whoami`, `who`, `w`
+- print disk usage              -> `df -h`
+- print running processes       -> `ps`
+- save process info into a file -> `ps > process.log`
+- print name, roll_no, comment  -> variables + `read -p`
+- use variables, take input, create a directory and a file
 
-## use variables, take input, create file and directory 
-=======
-# print current date - date
-# hostname and username - hostname whoami who w
-# process ps
-# add process info inside a file name process.log --> > process.log
+## Rough working
 
-# print name,roll_no, comment 
-
-## use variables, take input, create file and directory 
-
+```bash
 current_date=$(date)
-echo $current_date
+echo "$current_date"
 
-echo $hostname
-echo $whoami
+echo "$(hostname)"
+echo "$(whoami)"
+
 ps > process.log
+
 read -p "Enter your name: " name
 read -p "Enter your roll number: " roll_no
 read -p "Enter your comment: " comment
 
-echo  "My name is $name"
+echo "My name is $name"
 echo "My roll number is $roll_no"
 echo "My comment is: $comment"
->>>>>>> fbd957097c7bfe222468b33af5c097c2e9e05ec8
+```
+
+The final, cleaned-up version of this task is in **`system-info.sh`**,
+and the full output is documented in **`README.md`**.
