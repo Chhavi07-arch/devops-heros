@@ -394,6 +394,32 @@ and it stays high, hop 4 is your bottleneck.
 > container's NAT layer doesn't forward the ICMP Time Exceeded replies. The trace above was
 > therefore run from the host machine.
 
+### 📸 Screenshot — the networking commands in one session
+
+![ip -br addr, ip route show, ping, dig and traceroute run in the terminal](screenshots/networking.png)
+
+One terminal session running `ip -br addr`, `ip route show`, `ping -c 4 google.com`,
+`dig google.com` and `traceroute -m 12 google.com`.
+
+**This traceroute was run from a different network than the transcript above**, so the hops
+differ — and the comparison is itself instructive:
+
+| | Transcript above | Screenshot |
+|---|---|---|
+| Hop 1 (local router) | `wifi.height8tech.com` | `dns.nfen (192.168.1.1)` |
+| Hop 2 (ISP edge) | `convergentindia.com` | `static-...-tataidc.co.in` |
+| Hop 5 | `static-chennai.vsnl.net.in` | `static-chennai.vsnl.net.in` |
+| Final hop | still in transit at hop 12 | **hop 9 — `hkg07s52-in-f14.1e100.net`** |
+
+Two different local networks, but **both converge on the same Tata Communications backbone
+in Chennai at hop 5** before entering Google's network. The screenshot's trace is the more
+complete one: it actually **reaches the destination at hop 9**, and `hkg07s52` indicates the
+Google front-end that answered was in **Hong Kong**.
+
+The `ping` in the screenshot shows **0% packet loss** over 4 packets with `ttl=63` — one
+router crossed — and the `dig` shows `status: NOERROR` with a single A record and a TTL of
+`287` seconds.
+
 ---
 
 # 4. DNS Lookup

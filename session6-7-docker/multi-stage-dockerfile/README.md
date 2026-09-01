@@ -223,6 +223,10 @@ multistage-hello    latest    433656771dce   243MB       <-- multi-stage Node
 my-react-app        latest    9b63698f30aa   93.4MB      <-- multi-stage React ⭐
 ```
 
+### 📸 Screenshot — the measurement
+
+![docker images and docker history proving 93.4MB vs 1.19GB and the 821MB layer](../screenshots/image-size-comparison.png)
+
 ### Why React saves 92% but Node only saves 2%
 
 **This was the most useful thing I learned here — the saving isn't automatic.**
@@ -314,6 +318,10 @@ nginx-app        my-nginx-app       Up 9 minutes   0.0.0.0:8081->80/tcp
 | 7 | **Express** | Multi-stage | 8080 | `<h1>Hello World from Docker Multi-Stage Build!</h1>` | ✅ |
 
 All seven verified returning **HTTP 200**.
+
+### 📸 Screenshot — `docker ps`
+
+![docker ps showing all seven application containers running](../screenshots/docker-ps.png)
 
 ---
 

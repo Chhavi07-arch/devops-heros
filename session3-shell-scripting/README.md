@@ -214,6 +214,24 @@ tmpfs           4.0K     0  4.0K   0% /proc/scsi
 ==============================================
 ```
 
+### 📸 Screenshot — running the script interactively
+
+![system-info.sh running in the terminal with read -p prompts and full output](screenshots/script-output.png)
+
+This is a **separate interactive run**, which is why the date, PIDs and the entered
+name/roll/comment differ from the transcript above. It shows what the transcript can't:
+the **`read -p` prompts pausing for real keyboard input** —
+
+```
+Enter your name        : Chhavi
+Enter your roll number : 10201
+Enter a comment        : Hi there! I have completed my HW
+```
+
+— and then every requirement in sequence: the date, hostname, username, `df -h`, `ps aux`,
+the directory created with `mkdir`, the two files created with `touch`, `ps aux` written to
+`process.log` via `>` redirection, and the verification reading both files back.
+
 **Generated files** (committed in [`system_report/`](system_report)):
 - [`system_report/process.log`](system_report/process.log) — created by `ps aux > "$process_file"`
 - [`system_report/summary.log`](system_report/summary.log) — built with `>` then `>>`

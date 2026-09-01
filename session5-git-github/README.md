@@ -578,6 +578,15 @@ git log --oneline --graph --all
 * 2f4dd3e Commit 1: Add README
 ```
 
+### 📸 Screenshot — the branch graph in the terminal
+
+![git log --oneline --graph --all showing the cherry-picked commit duplicated on main](screenshots/cherry-pick-graph.png)
+
+In the screenshot, `HEAD -> main` sits at the top and `feature-branch` is the labelled
+branch below. Both **`c213c36`** (on `main`) and **`fa58aea`** (on `feature-branch`) carry
+the identical message *"Bugfix: Add safeDivide guard against divide-by-zero"* — the same
+change, two different commits.
+
 **You can see the duplication directly in this graph.** The same change now exists as two
 separate commits on two branches — `c213c36` on `main` and `fa58aea` on `feature-branch`.
 That's the defining trade-off of cherry-picking, and the reason for the caution below.

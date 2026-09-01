@@ -44,6 +44,16 @@ apache-app       my-apache-app      Up 9 minutes   0.0.0.0:8082->80/tcp,   [::]:
 nginx-app        my-nginx-app       Up 9 minutes   0.0.0.0:8081->80/tcp,   [::]:8081->80/tcp
 ```
 
+### 📸 Screenshot — `docker ps`
+
+![docker ps showing all containers running with their port mappings](screenshots/docker-ps.png)
+
+All seven application containers **Up**, each with its host→container port mapping in the
+`PORTS` column. (`backend`, `database`, `frontend`, `apache-host` and `bind-nginx` belong to
+the [Session 8](../session8-docker-networking-volume/README.md) exercises; `linux-hw` and
+`systemd-hw` are the Ubuntu containers used for the
+[Linux](../session2-linux/README.md) homework.)
+
 ## Every application verified serving Hello World
 
 ```bash
@@ -101,6 +111,10 @@ my-nginx-app        latest    605771a447cc   256MB
 my-node-app         latest    71ef0f391ca8   313MB
 my-java-app         latest    cef17106340e   744MB
 ```
+
+### 📸 Screenshot — `docker images`
+
+![docker images listing every built image with its size](screenshots/docker-images.png)
 
 **Worth noticing:** the **React app is the smallest at 93.4 MB** even though it's the most
 complex application here — because it's the only one built with a **multi-stage Dockerfile**.
@@ -302,6 +316,14 @@ RUN /bin/sh -c npm run build # buildkit        1.33MB  <-- the part we actually 
 
 **The output we ship is 1.33 MB. The toolchain to produce it is 821 MB.** Multi-stage builds
 exist precisely to stop shipping that 821 MB.
+
+### 📸 Screenshot — the size comparison measured
+
+![docker images and docker history showing 93.4MB vs 1.19GB and the 821MB npm install layer](screenshots/image-size-comparison.png)
+
+Both numbers side by side (`my-react-app` **93.4MB** vs `react-single` **1.19GB**), and
+below them the `docker history` output pinpointing **`RUN npm install` = 821MB** as the layer
+the multi-stage build leaves behind.
 
 ### Build and run
 

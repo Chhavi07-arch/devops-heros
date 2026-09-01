@@ -170,6 +170,23 @@ drwxr-xr-x 2 root root 4096 Aug 31 18:26 .
 drwx------ 1 root root 4096 Aug 31 18:25 ..
 ```
 
+### 📸 Screenshot — the full link demo in the terminal
+
+![Soft link and hard link demo showing shared inodes and the broken symlink](screenshots/links.png)
+
+Read the inode column (the first one) in the screenshot:
+
+- `hardlink.txt` and `original.txt` both show inode **`203463`** — the *same* file
+- `softlink.txt` shows inode **`203464`** and the `-> original.txt` arrow
+- the link count is **`2`** for the hard-linked pair, **`1`** for the symlink
+- after `rm original.txt`: `cat hardlink.txt` prints the text, `cat softlink.txt` fails with
+  `No such file or directory`
+
+> The inode numbers here (`203463`/`203464`) differ from the ones earlier in this document
+> because they were captured in a separate run. **Inode numbers are assigned by the
+> filesystem per file, so they are different every time you recreate the files** — what
+> matters is that the hard link *shares* the original's inode and the soft link does not.
+
 > **Important:** `rm` on a link removes **the link**, never the file it points to.
 > Do **not** use `rm softlink.txt/` with a trailing slash — that tries to follow the link.
 > To remove a symlink pointing at a directory, always use `rm mylink` (no trailing slash),
@@ -640,6 +657,19 @@ journalctl --no-pager -u nginx -o json-pretty -n 1
 fields. `PRIORITY: 6` is *info*, `UNIT` is which service, `_BOOT_ID` is which boot,
 `_CMDLINE` is what the process was running. That's why `journalctl -u nginx -p err -b`
 can filter so precisely where `grep` on a text file could not.
+
+### 📸 Screenshot — `journalctl -u nginx` and `systemctl status nginx`
+
+![journalctl showing the nginx service log and systemctl status output](screenshots/journalctl.png)
+
+The screenshot shows both commands run against the systemd container:
+
+- **`journalctl -u nginx --no-pager`** — the full lifecycle of the service: started →
+  stopping → deactivated → stopped → starting → started. That's the `systemctl restart`
+  captured as two distinct events.
+- **`systemctl status nginx --no-pager`** — `Active: active (running)`, `Main PID: 96`,
+  the full **CGroup** tree with the nginx master process and its 8 workers, and the last
+  few journal lines appended at the bottom.
 
 ---
 

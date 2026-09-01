@@ -76,9 +76,16 @@ a2a5feb6f61e   frontend-net   bridge    local
 e03a8c0a7711   none           null      local
 ```
 
+### 📸 Screenshot — `docker network ls`
+
+![docker network ls showing the three created networks alongside the three built-in ones](screenshots/docker-network-ls.png)
+
 The three at the bottom (`bridge`, `host`, `none`) are Docker's **built-in** networks — they
-always exist and can't be removed. The three I created use the **`bridge` driver**, which is
-the default for user-defined networks.
+always exist and can't be removed. The three I created (`backend-net`, `database-net`,
+`frontend-net`) use the **`bridge` driver**, which is the default for user-defined networks.
+
+Note the `DRIVER` column: my three and the built-in `bridge` are all `bridge`, `host` uses
+the `host` driver, and `none` uses the `null` driver.
 
 ## 2. Create the three containers
 
@@ -244,6 +251,27 @@ database (172.20.0.2:3306) open
 ✅ MySQL's port **3306** is open and reachable from the backend by name. Ping proves Layer 3
 reachability; this proves the **service** is actually usable.
 
+### 📸 Screenshot — the full connectivity test
+
+![docker ps, images, network ls, backend network inspect and all four ping tests](screenshots/connectivity-test.png)
+
+One session capturing the whole exercise. Reading it bottom-up — the last four commands are
+the ones that matter:
+
+```
+$ docker inspect backend --format '{{range $k,$v := .NetworkSettings.Networks}}...'
+backend-net(172.19.0.2) database-net(172.20.0.3) frontend-net(172.18.0.3)   ← 3 networks, 3 IPs
+
+$ docker exec backend ping -c 3 database     → 0% packet loss  ✅
+$ docker exec backend ping -c 3 frontend     → 0% packet loss  ✅
+$ docker exec frontend ping -c 2 database    → ping: bad address 'database'  ❌
+```
+
+The final line is the one to look at. **`bad address`** — not a timeout, not "unreachable".
+The name never resolved, because Docker's embedded DNS returns nothing for a container you
+share no network with. The `docker network ls` output above it shows all three networks
+(`backend-net`, `database-net`, `frontend-net`) alongside the three built-in ones.
+
 ---
 
 ## 6. `docker network inspect`
@@ -385,6 +413,14 @@ docker run --rm --network host curlimages/curl:latest -s http://localhost:80
 ```
 
 ✅ **Apache is serving on port 80 with no port mapping at all.**
+
+### 📸 Screenshot — host networking verified
+
+![docker ps with an empty PORTS column and Apache responding on localhost:80](screenshots/host-network.png)
+
+Both halves of the proof in one shot: `docker ps --filter name=apache-host` shows the
+container **Up** with a **completely empty `PORTS` column** (no mapping — because none is
+needed), and the `curl` beneath it returns Apache's `It works!` page from **port 80**.
 
 ```bash
 docker logs apache-host
