@@ -601,6 +601,12 @@ curl http://localhost:8090
 
 ✅ **Verified: the change appears immediately, with no container restart.**
 
+### Screenshot — the updated page in the browser
+
+![Bind mounted page updated live on localhost:8090](screenshots/bind-mount.png)
+
+The browser at **localhost:8090** shows the edited text, served by a container that was never rebuilt or restarted.
+
 ### 6. Confirmed from inside the container too
 
 ```bash

@@ -161,6 +161,12 @@ curl -s -o /dev/null -w '%{http_code}' http://localhost:8080
 ✅ **Verified: the application displays "Hello World from Docker Multi-Stage Build" and
 returns HTTP 200 on port 8080.**
 
+### Screenshot — the application in the browser
+
+![Hello World from Docker Multi-Stage Build, running on localhost:8080](../screenshots/multi-stage.png)
+
+The address bar shows **localhost:8080** and the page shows **"Hello World from Docker Multi-Stage Build!"** — both Task 1 requirements in one shot.
+
 🌐 **Open in a browser:** http://localhost:8080
 
 ## 3. Container logs

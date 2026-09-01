@@ -164,6 +164,10 @@ curl http://localhost:8081
 </html>
 ```
 
+### Screenshot
+
+![Nginx app running on port 8081](screenshots/custom-nginx.png)
+
 🌐 **Open in a browser:** http://localhost:8081
 
 ---
@@ -207,6 +211,10 @@ curl http://localhost:8082
 ```
 <h1>Hello World from Apache + Docker!</h1>
 ```
+
+### Screenshot
+
+![Apache app running on port 8082](screenshots/apache.png)
 
 🌐 **Open in a browser:** http://localhost:8082
 
@@ -322,7 +330,13 @@ curl -s http://localhost:8083/static/js/main.49b8dcf4.js | grep -o "Hello World 
 Hello World from React + Docker!
 ```
 
-🌐 **Open in a browser:** http://localhost:8083 — the heading renders there.
+### Screenshot
+
+![React app running on port 8083](screenshots/react.png)
+
+The heading is rendered by React in the browser, which is why it doesn't appear in the raw HTML above.
+
+🌐 **Open in a browser:** http://localhost:8083
 
 ---
 
@@ -401,6 +415,10 @@ curl http://localhost:5001
 Note the port mapping is **`5001:5000`** — host 5001 → container 5000. They don't have to
 match, which is how you run several containers that all listen on the same internal port.
 
+### Screenshot
+
+![Python Flask app running on port 5001](screenshots/python-app.png)
+
 🌐 **Open in a browser:** http://localhost:5001
 
 ---
@@ -471,6 +489,10 @@ curl http://localhost:3000
 <h1>Hello from Node.js + Docker!</h1>
 ```
 
+### Screenshot
+
+![Node.js app running on port 3000](screenshots/node-app.png)
+
 🌐 **Open in a browser:** http://localhost:3000
 
 ---
@@ -537,6 +559,10 @@ curl http://localhost:8085
 ```
 <h1>Hello from Java + Docker!</h1>
 ```
+
+### Screenshot
+
+![Java app running on port 8085](screenshots/java-app.png)
 
 🌐 **Open in a browser:** http://localhost:8085
 
