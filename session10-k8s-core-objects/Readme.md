@@ -40,7 +40,7 @@ kubectl apply -f daemonset/node-agent-ds.yaml
 
 kubectl get pods,rs,deployment,daemonset
 ```
-📸 `screenshots/core-objects.png`
+![Core objects — pod, replicaset, deployment, daemonset running](screenshots/core-objects.png)
 
 ## 2. Pod Lifecycle
 ```bash
@@ -48,7 +48,7 @@ cd pod-lifecycle
 kubectl apply -f 01-running.yaml -f 02-pending.yaml -f 04-failed.yaml -f 05-crashloopbackoff.yaml -f 06-imagepullbackoff.yaml
 kubectl get pods -w
 ```
-📸 `screenshots/pod-lifecycle.png` — Running / Pending / CrashLoopBackOff / ImagePullBackOff side by side
+![Pod lifecycle — Running / Pending / CrashLoopBackOff / ImagePullBackOff side by side](screenshots/pod-lifecycle.png)
 
 Details: [`pod-lifecycle/README.md`](pod-lifecycle/README.md)
 
@@ -60,7 +60,7 @@ kubectl rollout status deployment/app-rolling
 kubectl apply -f 01-rolling-update/deployment-v2.yaml
 kubectl get pods -l app=app-rolling -w
 ```
-📸 `screenshots/rolling-update.png` — pods rolling from v1 → v2 with zero downtime
+![Rolling update — pods rolling from v1 to v2 with zero downtime](screenshots/rolling-update.png)
 
 ## 4. Blue-Green Deployment
 ```bash
@@ -71,7 +71,7 @@ kubectl describe svc myapp-service | grep Selector      # -> points to blue
 kubectl apply -f 02-blue-green/service-green.yaml
 kubectl describe svc myapp-service | grep Selector      # -> now points to green
 ```
-📸 `screenshots/blue-green.png` — selector switching from blue to green
+![Blue-green — service selector switching from blue to green](screenshots/blue-green.png)
 
 ## 5. Canary Deployment
 ```bash
@@ -82,7 +82,7 @@ kubectl scale deployment app-canary --replicas=3
 kubectl scale deployment app-stable --replicas=7
 kubectl get pods -l app=myapp-canary --show-labels
 ```
-📸 `screenshots/canary.png` — stable + canary pods running together (7:3 split)
+![Canary — stable and canary pods running together in a 7:3 split](screenshots/canary.png)
 
 ## 6. Recreate Deployment
 ```bash
@@ -91,7 +91,7 @@ kubectl apply -f 04-recreate/service.yaml
 kubectl get pods -l app=app-recreate -w
 kubectl apply -f 04-recreate/deployment-v2.yaml     # watch old pods die BEFORE new ones start
 ```
-📸 `screenshots/recreate.png` — all v1 pods Terminating before any v2 pod appears
+![Recreate — all v1 pods Terminating before any v2 pod appears](screenshots/recreate.png)
 
 ## 7. Troubleshooting
 ```bash
@@ -102,7 +102,7 @@ kubectl describe pod <pod-name> | grep -A5 Events
 kubectl apply -f troubleshooting/selector-mismatch.yaml
 kubectl get endpoints selector-error-demo             # empty — selector matches no pod
 ```
-📸 `screenshots/troubleshooting.png`
+![Troubleshooting — ImagePullBackOff and empty endpoints from a selector mismatch](screenshots/troubleshooting.png)
 
 ---
 

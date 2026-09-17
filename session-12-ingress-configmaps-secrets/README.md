@@ -37,14 +37,14 @@ Full walkthrough with expected output: [`lab.md`](lab.md)
 kubectl apply -f 01-configmap/app-config.yaml
 kubectl get configmap yatri-app-config -o yaml
 ```
-📸 `screenshots/configmap.png`
+![ConfigMap created and its data visible via kubectl get](screenshots/configmap.png)
 
 ## 2. Secret
 ```bash
 kubectl apply -f 02-secret/db-secret.yaml
 kubectl get secret yatri-db-secret -o jsonpath='{.data.POSTGRES_PASSWORD}' | base64 --decode
 ```
-📸 `screenshots/secret.png`
+![Secret created and the database password decoded from base64](screenshots/secret.png)
 
 ## 3. Ingress
 ```bash
@@ -52,7 +52,7 @@ minikube addons enable ingress
 kubectl apply -f 03-ingress/ingress-routes.yaml
 kubectl get ingress yatri-ingress
 ```
-📸 `screenshots/ingress.png`
+![Ingress rules applied and the yatri-ingress resource listed](screenshots/ingress.png)
 
 ## 4. Full Demo (ConfigMap + Secret + Ingress)
 ```bash
@@ -61,14 +61,14 @@ bash run-demo.sh
 curl http://yatri.local
 curl http://yatri.local/api/
 ```
-📸 `screenshots/full-demo.png` — both routes responding through the one Ingress
+![Full demo — frontend and backend both responding through the one Ingress](screenshots/full-demo.png)
 
 ## 5. Troubleshooting — Secret Base64 Gotcha
 ```bash
 echo -n "secretpassword" | base64        # correct
 echo "secretpassword" | base64           # WRONG — trailing newline corrupts the value
 ```
-📸 `screenshots/troubleshooting.png`
+![Troubleshooting — correct vs incorrect base64 encoding of a secret value](screenshots/troubleshooting.png)
 
 Details: [`troubleshooting/secret-base64-gotcha.md`](troubleshooting/secret-base64-gotcha.md)
 

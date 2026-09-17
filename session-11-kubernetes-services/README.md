@@ -42,7 +42,7 @@ kubectl apply -f 01-clusterip/service.yaml
 kubectl apply -f 01-clusterip/client-pod.yaml
 kubectl exec -it curl-client -- curl web-service-clusterip:8080
 ```
-📸 `screenshots/clusterip.png`
+![ClusterIP — curl-client reaching the app through the internal virtual IP](screenshots/clusterip.png)
 
 ## 2. NodePort
 ```bash
@@ -51,7 +51,7 @@ kubectl apply -f 02-nodeport/service.yaml
 kubectl get svc web-service-nodeport
 curl http://$(minikube ip):30080
 ```
-📸 `screenshots/nodeport.png`
+![NodePort — service reachable via the tunneled node port](screenshots/nodeport.png)
 
 ## 3. LoadBalancer
 ```bash
@@ -60,7 +60,7 @@ kubectl apply -f 03-loadbalancer/service.yaml
 kubectl get svc web-service-loadbalancer
 minikube tunnel        # run in a separate terminal to assign an EXTERNAL-IP
 ```
-📸 `screenshots/loadbalancer.png`
+![LoadBalancer — service with an assigned EXTERNAL-IP via minikube tunnel](screenshots/loadbalancer.png)
 
 ## 4. ExternalName
 ```bash
@@ -68,7 +68,7 @@ kubectl apply -f 04-externalname/service.yaml
 kubectl apply -f 04-externalname/client-pod.yaml
 kubectl exec -it dns-test-client -- nslookup external-database-service
 ```
-📸 `screenshots/externalname.png`
+![ExternalName — DNS alias resolving to the external hostname](screenshots/externalname.png)
 
 ## 5. Headless Service
 ```bash
@@ -77,7 +77,7 @@ kubectl apply -f 05-headless/service.yaml
 kubectl apply -f 05-headless/client-pod.yaml
 kubectl exec -it headless-dns-client -- nslookup web-service-headless
 ```
-📸 `screenshots/headless.png` — DNS returning multiple pod IPs instead of one VIP
+![Headless service — DNS returning multiple pod IPs instead of one VIP](screenshots/headless.png)
 
 ## 6. FQDN / DNS Test
 ```bash
@@ -85,7 +85,7 @@ kubectl apply -f dns-test/curl-test-pod.yaml
 kubectl exec -it curl-test-pod -- cat /etc/resolv.conf
 kubectl exec -it curl-test-pod -- nslookup web-service-clusterip.default.svc.cluster.local
 ```
-📸 `screenshots/fqdn-dns-test.png`
+![FQDN / DNS test — resolv.conf and a full FQDN nslookup from inside the cluster](screenshots/fqdn-dns-test.png)
 
 ## 7. Troubleshooting
 ```bash
@@ -93,7 +93,7 @@ kubectl apply -f troubleshooting/empty-endpoints.yaml
 kubectl get endpoints broken-backend-service     # empty — selector matches no pod
 kubectl describe svc broken-backend-service
 ```
-📸 `screenshots/troubleshooting.png`
+![Troubleshooting — empty endpoints from a selector that matches no pod](screenshots/troubleshooting.png)
 
 ---
 
