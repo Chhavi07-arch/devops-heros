@@ -26,139 +26,98 @@ minikube addons enable metrics-server     # needed for kubectl top
 
 ```bash
 kubectl apply -f 01-kubectl-get/pod.yaml -f 03-kubectl-logs/pod.yaml
-kubectl get pods -o wide
-kubectl describe pod get-demo | tail -15
-kubectl logs logs-demo --tail=5
-```
-![get -o wide, describe events and logs output](../screenshots/kubectl-basics.png)
-
-```bash
+kubectl wait --for=condition=Ready pod/get-demo pod/logs-demo --timeout=90s
+kubectl get pod get-demo logs-demo -o wide
+kubectl describe pod get-demo | tail -6
+kubectl logs logs-demo --tail=3
 kubectl exec get-demo -- curl -s localhost | head -4
-kubectl get events --sort-by=.lastTimestamp | tail -10
-kubectl explain pod.spec.containers.livenessProbe | head -15
-kubectl top pods
+kubectl events --for pod/get-demo
+kubectl explain pod.spec.containers.livenessProbe | head -8
+kubectl top pod get-demo logs-demo
 ```
-![exec into the container, events, explain and top](../screenshots/kubectl-exec-events.png)
+![get -o wide, describe, logs, exec, events, explain and top](../screenshots/kubectl-commands.png)
 
 ---
 
-## 2. Troubleshooting Scenarios
+## 2. Troubleshooting Pod Issues
 
-Every scenario follows the same steps: **get → describe (Events) → logs → fix → verify**.
+Every issue follows the same steps: **get → describe / events → root cause → fix → verify**.
 
-### CrashLoopBackOff (`06-crashloopbackoff/`)
-**Problem:** `crash-demo` keeps restarting and ends up in `CrashLoopBackOff`.  
-**Root cause:** the container command runs `exit 1`, so the process dies as soon as it starts.  
-**Fix:** use a command that keeps the process running (`sleep 3600`).
+| Issue | Pod | Root cause | Fix |
+|---|---|---|---|
+| CrashLoopBackOff | `crash-demo` | Command runs `exit 1`, so the container dies on start | Long-running command (`sleep 3600`) |
+| ErrImagePull → ImagePullBackOff | `image-demo` | Tag `nginx:this-image-does-not-exist` isn't in the registry | Valid tag `nginx:1.27` |
+| Pending | `pending-demo` | `nodeSelector` matches no node (`FailedScheduling`) | Remove the nodeSelector |
+| ContainerCreating | `containercreating-demo` (added) | Mounts ConfigMap `cc-demo-config`, which doesn't exist (`FailedMount`) | Create the ConfigMap |
+| Config issue | `config-demo` (added) | Env var refers to key `DATABASE_URL`, but the ConfigMap only has `DB_URL` (`CreateContainerConfigError`) | Point `configMapKeyRef.key` at `DB_URL` |
+
 ```bash
-kubectl apply -f 06-crashloopbackoff/broken-pod.yaml
-kubectl get pod crash-demo                 # wait ~20s for RESTARTS > 0
-kubectl logs crash-demo --previous
-kubectl describe pod crash-demo | grep -A3 'Last State'
-kubectl delete pod crash-demo && kubectl apply -f 06-crashloopbackoff/fixed-pod.yaml
-kubectl get pod crash-demo
+# break: apply all broken pods
+kubectl apply -f 06-crashloopbackoff/broken-pod.yaml -f 07-imagepullbackoff/broken-pod.yaml \
+  -f 08-pending-pods/broken-pod.yaml -f 10-containercreating/broken-pod.yaml \
+  -f 11-config-issues/configmap.yaml -f 11-config-issues/broken-pod.yaml
+sleep 40
+kubectl get pod crash-demo image-demo pending-demo containercreating-demo config-demo
+
+# investigate: one warning event per pod shows the root cause
+kubectl get events --field-selector type=Warning --sort-by=.lastTimestamp \
+  -o custom-columns=POD:.involvedObject.name,REASON:.reason,MESSAGE:.message \
+  | grep -E 'crash-demo|image-demo|pending-demo|containercreating-demo|config-demo' | sort -u -k1,1
+
+# fix and verify
+kubectl delete pod crash-demo image-demo pending-demo config-demo
+kubectl apply -f 06-crashloopbackoff/fixed-pod.yaml -f 07-imagepullbackoff/fixed-pod.yaml \
+  -f 08-pending-pods/fixed-pod.yaml -f 11-config-issues/fixed-pod.yaml \
+  -f 10-containercreating/configmap.yaml
+sleep 20
+kubectl get pod crash-demo image-demo pending-demo containercreating-demo config-demo
 ```
-![crash-demo going from CrashLoopBackOff to Running](../screenshots/crashloopbackoff.png)
+![Five broken pods, the warning event behind each one, and all five Running after the fix](../screenshots/pod-issues.png)
 
-### ImagePullBackOff / ErrImagePull (`07-imagepullbackoff/`)
-**Problem:** `image-demo` shows `ErrImagePull` first, then `ImagePullBackOff`.  
-**Root cause:** the tag `nginx:this-image-does-not-exist` isn't in the registry.  
-**Fix:** use a real tag, `nginx:1.27`.
-```bash
-kubectl apply -f 07-imagepullbackoff/broken-pod.yaml
-kubectl get pod image-demo -w            # ErrImagePull -> ImagePullBackOff, Ctrl+C
-kubectl describe pod image-demo | grep -A8 Events
-kubectl delete pod image-demo && kubectl apply -f 07-imagepullbackoff/fixed-pod.yaml
-kubectl get pod image-demo
-```
-![ErrImagePull/ImagePullBackOff, the "not found" event, then Running after the fix](../screenshots/imagepullbackoff.png)
+---
 
-### Pending (`08-pending-pods/`)
-**Problem:** `pending-demo` stays `Pending` and never gets scheduled.  
-**Root cause:** `nodeSelector: kubernetes.io/hostname: node-that-does-not-exist` doesn't match any node (`FailedScheduling`).  
-**Fix:** remove the nodeSelector.
-```bash
-kubectl apply -f 08-pending-pods/broken-pod.yaml
-kubectl get pod pending-demo
-kubectl describe pod pending-demo | grep -A5 Events
-kubectl get nodes --show-labels | grep hostname
-kubectl delete pod pending-demo && kubectl apply -f 08-pending-pods/fixed-pod.yaml
-kubectl get pod pending-demo -o wide
-```
-![FailedScheduling because of the node selector, then the Pod scheduled on minikube](../screenshots/pending.png)
+## 3. Service, DNS and Pod Networking (`09-service-dns-troubleshooting/`)
 
-### ContainerCreating (`10-containercreating/`, added)
-**Problem:** `containercreating-demo` is stuck in `ContainerCreating`.  
-**Root cause:** it mounts ConfigMap `cc-demo-config`, which doesn't exist (`FailedMount` event).  
-**Fix:** create the ConfigMap. The kubelet retries the mount and the Pod starts.
-```bash
-kubectl apply -f 10-containercreating/broken-pod.yaml
-kubectl get pod containercreating-demo
-kubectl describe pod containercreating-demo | grep -A5 Events
-kubectl apply -f 10-containercreating/configmap.yaml
-kubectl get pod containercreating-demo -w     # Running, Ctrl+C
-```
-![FailedMount: configmap not found, then Running once the ConfigMap exists](../screenshots/containercreating.png)
+| Issue | Root cause | Fix |
+|---|---|---|
+| Service has no endpoints | Selector `app: web-ahsgdf` ≠ pod label `app: web` | Patch the selector to `app: web` |
+| DNS lookup fails (`NXDOMAIN`) | Wrong name `web-svc`; DNS format is `<svc>.<ns>.svc.cluster.local` | Use `web-service.default.svc.cluster.local` |
 
-### Config issue (`11-config-issues/`, added)
-**Problem:** `config-demo` shows `CreateContainerConfigError`.  
-**Root cause:** the env var refers to key `DATABASE_URL`, but ConfigMap `config-demo-cm` only has `DB_URL`.  
-**Fix:** point `configMapKeyRef.key` at `DB_URL`.
 ```bash
-kubectl apply -f 11-config-issues/configmap.yaml -f 11-config-issues/broken-pod.yaml
-kubectl get pod config-demo
-kubectl describe pod config-demo | grep -A5 Events
-kubectl get configmap config-demo-cm -o yaml
-kubectl delete pod config-demo && kubectl apply -f 11-config-issues/fixed-pod.yaml
-kubectl logs config-demo
-```
-![CreateContainerConfigError for the missing key, fixed and printing DATABASE_URL](../screenshots/config-issue.png)
-
-### Service connectivity (`09-service-dns-troubleshooting/`)
-**Problem:** `web-service` exists, but it has no endpoints, so it can't reach the pods.  
-**Root cause:** the Service selector is `app: web-ahsgdf`, but the pods are labelled `app: web`.  
-**Fix:** change the selector to `app: web`.
-```bash
-kubectl apply -f 09-service-dns-troubleshooting/deployment.yaml -f 09-service-dns-troubleshooting/service.yaml
-kubectl get endpoints web-service                       # <none>
-kubectl get pods -l app=web --show-labels
+kubectl apply -f 09-service-dns-troubleshooting/deployment.yaml -f 09-service-dns-troubleshooting/service.yaml \
+  -f 09-service-dns-troubleshooting/dns-test-pod.yaml
+kubectl wait --for=condition=Ready pod/dns-test --timeout=120s
+kubectl get endpoints web-service                                  # <none>
 kubectl describe service web-service | grep Selector
 kubectl patch service web-service -p '{"spec":{"selector":{"app":"web"}}}'
-kubectl get endpoints web-service                       # 2 pod IPs
-```
-![Empty endpoints because of the selector/label mismatch, filled in after the patch](../screenshots/service-endpoints.png)
-
-### DNS + pod networking
-**Problem:** a lookup for `web-svc` fails with `NXDOMAIN`.  
-**Root cause:** wrong Service name. DNS names follow `<service>.<namespace>.svc.cluster.local`.  
-**Fix:** use `web-service` (or its full name). Then check the pod network directly by reaching a pod IP.
-```bash
-kubectl apply -f 09-service-dns-troubleshooting/dns-test-pod.yaml
-kubectl wait --for=condition=Ready pod/dns-test --timeout=120s
-kubectl exec dns-test -- nslookup web-svc                                   # fails
-kubectl exec dns-test -- nslookup web-service.default.svc.cluster.local     # resolves
-kubectl exec dns-test -- cat /etc/resolv.conf
+kubectl get endpoints web-service                                  # pod IPs now
+kubectl exec dns-test -- nslookup web-svc                          # fails
+kubectl exec dns-test -- nslookup web-service.default.svc.cluster.local
 kubectl get pods -n kube-system -l k8s-app=kube-dns
 POD_IP=$(kubectl get pods -l app=web -o jsonpath='{.items[0].status.podIP}')
-kubectl run net-test --rm -it --image=busybox:1.36 --restart=Never -- \
-  sh -c "wget -qO- http://web-service | head -4; wget -qO- http://$POD_IP | head -4"
+kubectl exec get-demo -- curl -s http://$POD_IP | head -4          # pod-to-pod networking
 ```
-![NXDOMAIN vs a resolved FQDN, CoreDNS running, and both the Service and the pod IP reachable](../screenshots/dns-networking.png)
+![Empty endpoints fixed by the selector patch, NXDOMAIN vs the resolved FQDN, CoreDNS running, and a pod IP reachable](../screenshots/service-dns.png)
 
 ---
 
-## 3. Mini Project (`mini-project/`)
+## 4. Mini Project (`mini-project/`)
 
-### Broken pod
 ```bash
 cd mini-project
 kubectl apply -f deployment.yaml -f service.yaml -f broken-pod.yaml
-kubectl get pods -o wide
-kubectl describe pod project-broken-pod | grep -A8 Events
-kubectl set image pod/project-broken-pod app=nginx:1.27
+sleep 20
 kubectl get pod project-broken-pod
+kubectl describe pod project-broken-pod | grep -E 'Failed|manifest' | head -3
+kubectl set image pod/project-broken-pod app=nginx:1.27
+kubectl patch service troubleshooting-service -p '{"spec":{"selector":{"app":"wrong-app"}}}'
+kubectl get endpoints troubleshooting-service                     # <none>
+kubectl apply -f service.yaml                                      # restore app: troubleshooting-app
+kubectl get endpoints troubleshooting-service
+kubectl get pod project-broken-pod
+cd ..
 ```
-![project-broken-pod in ImagePullBackOff, fixed with set image](../screenshots/mini-project-broken-pod.png)
+![Broken image fixed with set image, and the Service endpoints emptied by a wrong selector and then restored](../screenshots/mini-project.png)
 
 | Q | Answer |
 |---|---|
@@ -167,18 +126,6 @@ kubectl get pod project-broken-pod
 | 3. Command that found it? | `kubectl describe pod project-broken-pod` (Events) |
 | 4. What's wrong with the image? | The tag doesn't exist on Docker Hub |
 | 5. Fix? | Use a valid tag (`nginx:1.27`) in the YAML, or `kubectl set image` |
-
-### Service selector
-```bash
-kubectl patch service troubleshooting-service -p '{"spec":{"selector":{"app":"wrong-app"}}}'
-kubectl get endpoints troubleshooting-service           # <none>
-kubectl get pods --show-labels | grep troubleshooting
-kubectl apply -f service.yaml                           # restore app: troubleshooting-app
-kubectl get endpoints troubleshooting-service
-POD=$(kubectl get pods -l app=troubleshooting-app -o jsonpath='{.items[0].metadata.name}')
-kubectl exec $POD -- curl -s localhost | head -4
-```
-![Endpoints empty with the wrong selector, restored afterwards, and nginx answering inside the pod](../screenshots/mini-project-service.png)
 
 ### Troubleshooting table
 | Problem | What I Saw | Command I Used | Root Cause | Fix |
@@ -203,9 +150,7 @@ kubectl exec $POD -- curl -s localhost | head -4
 
 ## Cleanup
 ```bash
-# from mini-project/
-kubectl delete -f deployment.yaml -f service.yaml -f broken-pod.yaml
-cd ..
+kubectl delete -f mini-project/deployment.yaml -f mini-project/service.yaml -f mini-project/broken-pod.yaml
 kubectl delete pod get-demo logs-demo crash-demo image-demo pending-demo containercreating-demo config-demo dns-test --ignore-not-found
 kubectl delete configmap cc-demo-config config-demo-cm
 kubectl delete -f 09-service-dns-troubleshooting/deployment.yaml -f 09-service-dns-troubleshooting/service.yaml
