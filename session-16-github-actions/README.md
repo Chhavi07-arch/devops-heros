@@ -59,30 +59,24 @@ pip install -r requirements.txt
 pytest -v
 bash build.sh
 ```
-![pytest passing and build output locally](screenshots/local-tests.png)
 
-## 2. Trigger the Pipeline
+## 2. Pipeline Run
 
-Push to `main` (any change under `homework-cicd/`) or **Actions → Session 16 CI/CD → Run workflow**.
+Triggered by a push to `main` (any change under `homework-cicd/`) or **Actions → Session 16 CI/CD → Run workflow**.
 
-![Workflow run succeeded](screenshots/pipeline-success.png)
-![Job graph: build-test → docker → deploy](screenshots/job-graph.png)
+![Successful run: build-test → docker → deploy, with the test-report and calculator-build artifacts](screenshots/pipeline.png)
 
-## 3. CI — Build & Test
+## 3. CI: Build & Test
 
-![Build & Test job steps with pytest output](screenshots/build-test-job.png)
-![Uploaded artifacts: test-report and calculator-build](screenshots/artifacts.png)
+![Build & Test job with the pytest output](screenshots/build-test-job.png)
 
-## 4. Docker Image on GHCR
+## 4. Docker Image on GHCR (and CD)
 
-![Docker job pushing the image](screenshots/docker-job.png)
+The `docker` job pushes the image to GHCR. The `deploy` job (`environment: production`) then downloads the build artifact and deploys.
+
 ![session16-calculator package on GHCR](screenshots/ghcr-package.png)
 
 ```bash
 docker pull ghcr.io/chhavi07-arch/session16-calculator:latest
 docker run --rm ghcr.io/chhavi07-arch/session16-calculator:latest
 ```
-
-## 5. CD — Deploy
-
-![Deploy job downloading the artifact and deploying](screenshots/deploy-job.png)
