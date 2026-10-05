@@ -73,27 +73,16 @@ kubectl get pv
 
 Files: [`deployment.yaml`](04-hpa/deployment.yaml) (CPU request 100m), [`service.yaml`](04-hpa/service.yaml), [`hpa.yaml`](04-hpa/hpa.yaml) (1–5 replicas, 50% CPU), [`load-generator.yaml`](04-hpa/load-generator.yaml)
 
-### Deploy and configure HPA
 ```bash
 kubectl apply -f 04-hpa/deployment.yaml -f 04-hpa/service.yaml -f 04-hpa/hpa.yaml
-kubectl get hpa hpa-demo
-kubectl top pods
-```
-![HPA created, targets at 0%/50% with 1 replica](screenshots/hpa-setup.png)
-
-### Generate load and watch the scaling
-```bash
 kubectl apply -f 04-hpa/load-generator.yaml
-kubectl get hpa hpa-demo -w          # Ctrl+C once REPLICAS goes up
-kubectl top pods
+sleep 90                                   # give metrics-server time to see the load
+kubectl get hpa hpa-demo
+kubectl top pods -l app=hpa-demo
 kubectl get pods -l app=hpa-demo
+kubectl describe hpa hpa-demo | tail -6
 ```
-![CPU above target and hpa-demo scaled out to more replicas](screenshots/hpa-scaling.png)
-
-```bash
-kubectl describe hpa hpa-demo
-```
-![describe hpa showing the SuccessfulRescale events](screenshots/hpa-describe.png)
+![HPA above its 50% CPU target, hpa-demo scaled out, and SuccessfulRescale events](screenshots/hpa.png)
 
 After `kubectl delete pod load-generator` the HPA scales back down to 1 replica. The default stabilization window for scale-down is 5 minutes.
 
@@ -101,35 +90,27 @@ After `kubectl delete pod load-generator` the HPA scales back down to 1 replica.
 
 ## 3. Mini Project (`mini-project/`)
 
-### Deploy
+Namespace `production-webapp`: a `web-app` Deployment (2 replicas) with startup/readiness/liveness probes, a PVC mounted at `/data`, a Service, and an HPA (2–5 replicas).
+
 ```bash
 cd mini-project
 kubectl apply -f namespace.yaml
 kubectl apply -f pvc.yaml -f deployment.yaml -f service.yaml -f hpa.yaml
+kubectl wait --for=condition=Ready pod -l app=web-app -n production-webapp --timeout=120s
 kubectl get pvc,pods,svc,hpa -n production-webapp
-```
-![production-webapp: PVC Bound, 2 pods Running, service and HPA created](screenshots/mini-project-deploy.png)
 
-### Storage persistence
-```bash
+# storage persistence: write a file, delete the pod, read it from the new pod
 POD=$(kubectl get pods -n production-webapp -l app=web-app -o jsonpath='{.items[0].metadata.name}')
 kubectl exec -n production-webapp $POD -- sh -c 'echo "Student: Chhavi Ahlawat" > /data/student.txt'
 kubectl delete pod -n production-webapp $POD
-kubectl wait --for=condition=Ready pod -l app=web-app -n production-webapp --timeout=90s
+kubectl wait --for=condition=Ready pod -l app=web-app -n production-webapp --timeout=120s
 NEW=$(kubectl get pods -n production-webapp -l app=web-app -o jsonpath='{.items[0].metadata.name}')
 kubectl exec -n production-webapp $NEW -- cat /data/student.txt
-```
-![File still there after the Pod is recreated](screenshots/mini-project-persistence.png)
 
-### Probes + HPA scaling
-```bash
+# probes
 kubectl describe pod -n production-webapp $NEW | grep -E 'Liveness|Readiness|Startup'
-kubectl run load-generator -n production-webapp --image=busybox:1.36 --restart=Never \
-  -- /bin/sh -c "while true; do wget -q -O- http://web-service > /dev/null; done"
-kubectl get hpa -n production-webapp -w      # Ctrl+C once REPLICAS goes up
-kubectl get pods -n production-webapp
 ```
-![Startup/readiness/liveness probes configured, and web-app-hpa scaling from 2 replicas](screenshots/mini-project-hpa.png)
+![production-webapp resources, the file surviving a pod restart, and the three probes](screenshots/mini-project.png)
 
 ---
 
