@@ -52,29 +52,23 @@ Every stage is a separate job chained with `needs:` — if any job fails, everyt
 **Note on SAST findings:** Bandit reports `B201 flask debug=True` (HIGH severity, MEDIUM confidence), `B104` bind to `0.0.0.0` and `B311` use of `random`. `0.0.0.0` is required inside a container and `random` is not used for security, so those are accepted; `debug=True` should be turned off for production (e.g. read it from an env var).
 
 ## 1. Pipeline Run
+
+All 9 jobs pass in order. Each security job (Bandit, pip-audit, Gitleaks, Trivy) blocks every job after it if it finds a problem.
+
 ![All 9 jobs green in the Actions run graph](screenshots/pipeline-graph.png)
 
-## 2. Build & Unit Test
-![pytest output: 8 passed with coverage](screenshots/unit-tests.png)
+## 2. Security Gate
 
-## 3. SAST — Bandit
-![Bandit report and gate step passing](screenshots/sast-bandit.png)
+The gate fails the pipeline on any HIGH/CRITICAL vulnerability that has a fix. On the first runs the gates did their job:
+- **SCA (pip-audit)** flagged `pytest 8.4.2` (PYSEC-2026-1845), fixed by upgrading to `pytest 9.0.3`.
+- **Trivy gate** flagged `libpcre2` CVE-2026-103111 (HIGH) in the base image, fixed by adding `apt-get upgrade` to the Dockerfile.
 
-## 4. SCA — pip-audit
-![pip-audit: No known vulnerabilities found](screenshots/sca-pip-audit.png)
+![Trivy security gate passing with no fixable HIGH/CRITICAL vulnerabilities](screenshots/security-gate.png)
 
-## 5. Secret Scan — Gitleaks
-![Gitleaks: no leaks found](screenshots/secret-scan.png)
+## 3. Push to GHCR + Deploy to Kubernetes
 
-## 6. Image Scan + Security Gate — Trivy
-![Trivy image scan report](screenshots/trivy-scan.png)
-![Security gate passed](screenshots/security-gate.png)
+The image is pushed to `ghcr.io/chhavi07-arch/session17-devsecops`, loaded into a kind cluster, and deployed with `kubectl apply -f k8s/`.
 
-## 7. Push to GHCR
-![Image pushed to ghcr.io](screenshots/ghcr-push.png)
-![Package visible on GitHub](screenshots/ghcr-package.png)
-
-## 8. Deploy to Kubernetes
 ![kubectl rollout status and curl /health from the kind cluster](screenshots/k8s-deploy.png)
 
 ## Run Locally (optional)
