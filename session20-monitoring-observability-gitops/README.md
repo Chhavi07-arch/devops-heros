@@ -33,10 +33,11 @@ Cluster: minikube on macOS.
 ```bash
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 helm repo update
-helm install kube-prometheus-stack prometheus-community/kube-prometheus-stack -n monitoring --create-namespace
+helm install kube-prometheus-stack prometheus-community/kube-prometheus-stack -n monitoring --create-namespace \
+  --set alertmanager.enabled=false
 cd session20-monitoring-observability-gitops/homework
 kubectl apply -f monitoring/demo-app.yaml -f monitoring/alert-rules.yaml
-kubectl get pods -n monitoring                                                   # Prometheus, Grafana, Alertmanager
+kubectl get pods -n monitoring                                                   # Prometheus, Grafana, operator, exporters
 kubectl get pods -n chhavi-demo                                                  # app health
 kubectl describe pod -n chhavi-demo -l app=chhavi-web | grep -E "Liveness|Readiness"
 kubectl logs -n chhavi-demo deploy/cpu-burner --tail=3                           # logs
