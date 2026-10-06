@@ -25,49 +25,24 @@ Bucket `chhavi-24bcs10201-<random-hex>` in `us-east-2` with versioning, AES-256 
 cd session18-terraform-iac/homework/terraform-s3-demo
 ```
 
-### 1. Init
+### Commands
 ```bash
 terraform init
-```
-![terraform init downloads aws and random providers](../screenshots/tf-init.png)
-
-### 2. Fmt & Validate
-```bash
-terraform fmt && terraform validate
-```
-![Configuration is valid](../screenshots/tf-fmt-validate.png)
-
-### 3. Plan
-```bash
-terraform plan
-```
-![Plan: 5 to add, 0 to change, 0 to destroy](../screenshots/tf-plan.png)
-
-### 4. Apply
-```bash
+terraform fmt
+terraform validate
+terraform plan          # 5 to add
 terraform apply
-```
-![Apply complete with outputs](../screenshots/tf-apply.png)
-
-### 5. Show & Output
-```bash
 terraform show
 terraform output
-```
-![terraform show state of the bucket](../screenshots/tf-show.png)
-![terraform output values](../screenshots/tf-output.png)
-
-### 6. Verify in AWS
-```bash
-aws s3 ls | grep chhavi
-```
-![Bucket listed by AWS CLI / visible in S3 console](../screenshots/s3-console.png)
-
-### 7. Destroy
-```bash
 terraform destroy
 ```
-![Destroy complete: 5 destroyed](../screenshots/tf-destroy.png)
+
+### Terraform workflow screenshots
+These are from my session 19 VPC run (`session19-cloud-terraform/06-terraform-vpc`), which uses the same plan → apply → state → show workflow.
+
+![terraform plan: resources to be created](../../session19-cloud-terraform/06-terraform-vpc/screenshots/ss3.png)
+![terraform apply complete, outputs and state list](../../session19-cloud-terraform/06-terraform-vpc/screenshots/ss1.png)
+![terraform show](../../session19-cloud-terraform/06-terraform-vpc/screenshots/ss4.png)
 
 ## Task 2 — AWS Services Research
 

@@ -52,48 +52,44 @@ flowchart TB
 
 ---
 
-## 1. Init & Validate
+## Terraform Workflow in Action (VPC lab, `06-terraform-vpc/`)
+
+Run on AWS in `us-east-2`: 6 resources (VPC, public subnet, IGW, route table + association, security group), all named `chhavi-session19-*`.
+
+```bash
+cd 06-terraform-vpc
+terraform init
+terraform plan
+terraform apply
+terraform state list
+terraform show
+terraform destroy
+```
+
+### Plan: execution plan with the resources to be created
+![terraform apply plan showing chhavi-session19 resources to be created in us-east-2](06-terraform-vpc/screenshots/ss3.png)
+
+### Apply: 6 added, outputs, and `terraform state list`
+![Apply complete: 6 added, outputs, and terraform state list](06-terraform-vpc/screenshots/ss1.png)
+
+### State: `terraform show` for the Internet Gateway and Route Table
+![terraform show for the internet gateway and public route table](06-terraform-vpc/screenshots/ss2.png)
+
+### State: `terraform show` for the Subnet, VPC and Outputs
+![terraform show for the public subnet, VPC, and outputs](06-terraform-vpc/screenshots/ss4.png)
+
+---
+
+## Full Project: VPC + EC2 + S3 (`homework/`)
+
+Extends the VPC lab with an EC2 web server (nginx, "Hello from Chhavi") and a versioned, private S3 bucket. 10 resources; `terraform validate` passes.
+
 ```bash
 cd homework
 cp terraform.tfvars.example terraform.tfvars
-terraform init
-terraform fmt && terraform validate
-```
-![terraform init and validate success](screenshots/init-validate.png)
-
-## 2. Plan
-```bash
-terraform plan
-```
-![terraform plan — 10 resources to add](screenshots/plan.png)
-
-## 3. Apply + Outputs
-```bash
+terraform init && terraform validate
+terraform plan                                   # 10 to add
 terraform apply
-terraform output
-```
-![Apply complete with outputs](screenshots/apply-outputs.png)
-
-## 4. State
-```bash
-terraform state list
-terraform state show aws_instance.web
-```
-![terraform state list](screenshots/state-list.png)
-
-## 5. Website running on EC2
-```bash
-curl $(terraform output -raw website_url)
-```
-![Hello from Chhavi page served by nginx](screenshots/website.png)
-
-## 6. Resources in AWS Console
-![EC2 instance in the AWS console](screenshots/console-ec2.png)
-![VPC and subnet in the AWS console](screenshots/console-vpc.png)
-![S3 bucket with versioning enabled](screenshots/console-s3.png)
-
-## 7. Destroy
-```bash
+curl $(terraform output -raw website_url)        # Hello from Chhavi
 terraform destroy
 ```
-![terraform destroy — all resources removed](screenshots/destroy.png)
