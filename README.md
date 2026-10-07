@@ -20,6 +20,7 @@ real output they produced.
 | 6 | **Docker Fundamentals** | [session6-7-docker/README.md](session6-7-docker/README.md) |
 | 7 | **Docker Images** (multi-stage) | [session6-7-docker/multi-stage-dockerfile/README.md](session6-7-docker/multi-stage-dockerfile/README.md) |
 | 8 | **Docker Networking & Volumes** | [session8-docker-networking-volume/README.md](session8-docker-networking-volume/README.md) |
+| 21 | **Final DevOps Project & Troubleshooting** | [session21-python/README.md](session21-python/README.md) |
 
 ---
 
